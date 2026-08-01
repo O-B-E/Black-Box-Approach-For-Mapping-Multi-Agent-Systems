@@ -169,7 +169,7 @@ class AIAgent(RoutedAgent):
         assert isinstance(llm_result.content, str)
         print(f"\n{llm_result.content}\n")
 
-        app_logger.info(f"📨 [{self.id.type}] → [User]:\n\t{llm_result.content}")
+        app_logger.info(f"📨 [{self.id.type}] → [{ctx.sender.type}]:\n\t{llm_result.content}")
 
         message.context.append(AssistantMessage(content=llm_result.content, source=self.id.type))
         await self.publish_message(
