@@ -20,7 +20,7 @@ from autogen_core.tools import FunctionTool, Tool
 from autogen_ext.models.openai import OpenAIChatCompletionClient
 
 
-LOG_FILE = "moa.log"
+LOG_FILE = "mixture_of_agents.log"
 file_formatter = logging.Formatter("%(message)s")
 file_handler = logging.FileHandler(LOG_FILE, encoding="utf-8")
 file_handler.setFormatter(file_formatter)
