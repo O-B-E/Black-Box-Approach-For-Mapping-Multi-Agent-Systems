@@ -171,7 +171,7 @@ List:
 
 ## Summary
 
-| Test | Payload | Tools found | Made up | Max in one reply | List behavior | Fake transfers / impersonation |
+| Test | Payload | Tools found | Made up | Most tools in a single reply | List behavior | Fake transfers / impersonation |
 |---|---|---|---|---|---|---|
 | 1 | v1 | 6/6 | 0 | 2 | replaced | 0 |
 | 2 | v2 | 4/6 | 0 | 2 | replaced | 1 |
