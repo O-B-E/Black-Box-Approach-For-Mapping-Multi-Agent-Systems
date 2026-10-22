@@ -149,7 +149,7 @@ async def build_runtime(model_client: ChatCompletionClient, workflow: list[Worke
 async def main() -> None:
     load_dotenv()
     model_client = OpenAIChatCompletionClient(
-        model="gemini-3.5-flash-lite", #os.getenv("MODEL_NAME"),
+        model=os.getenv("MODEL_NAME"),
         api_key=os.getenv("GEMINI_API_KEY"),
         base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
         model_info={
