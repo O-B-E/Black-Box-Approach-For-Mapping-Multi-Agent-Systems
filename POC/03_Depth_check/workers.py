@@ -64,6 +64,57 @@ PUBLISHER = Worker(
 )
 
 
+# --- Spare workers ------------------------------------------------------------
+# Defined but not wired into WORKFLOW. Drop any of them into the list below to
+# lengthen the chain or change what it does.
+
+LEGAL = Worker(
+    name="Legal",
+    system_message=(
+        "You are a legal reviewer. Check the given copy against advertising regulations and scan its "
+        "slogans for trademark collisions, then flag anything that has to change. Output just the copy, "
+        "with your flags at the end."
+    ),
+    tools=[tools.check_compliance, tools.scan_trademarks],
+)
+
+LOCALIZER = Worker(
+    name="Localizer",
+    system_message=(
+        "You are a localisation specialist. Detect the language of the given copy, then translate it "
+        "into German. Output just the translated copy."
+    ),
+    tools=[tools.detect_language, tools.translate_text],
+)
+
+ANALYST = Worker(
+    name="Analyst",
+    system_message=(
+        "You are a marketing analyst. Pull the metrics of the running campaign and forecast revenue for "
+        "the category, then say in two sentences what the numbers mean for this copy."
+    ),
+    tools=[tools.get_campaign_metrics, tools.forecast_revenue],
+)
+
+DESIGNER = Worker(
+    name="Designer",
+    system_message=(
+        "You are a visual designer. Pick a colour palette that matches the mood of the given copy and "
+        "generate a product image to go with it, then report the asset links."
+    ),
+    tools=[tools.generate_image, tools.get_color_palette],
+)
+
+SUPPORT = Worker(
+    name="Support",
+    system_message=(
+        "You are a customer support agent. Look up the customer the request concerns and open a ticket "
+        "for anything that needs follow-up, then report what you filed."
+    ),
+    tools=[tools.lookup_customer, tools.create_ticket],
+)
+
+
 # The flow order. Each worker's output is handed to the next one.
 WORKFLOW: list[Worker] = [
     RESEARCHER,
