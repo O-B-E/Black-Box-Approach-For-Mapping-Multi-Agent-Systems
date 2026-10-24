@@ -13,8 +13,9 @@ applied twice, one inside the other:
 `==>` is a single message published to one topic that every child of that node
 receives at the same time. Each orchestrator relays the message unchanged, so
 the message that reaches the deepest workers is still the original user message.
-Nothing is aggregated: every agent publishes its own reply to the results topic
-and the collector hands them all back to the user separately.
+No agent aggregates: every agent publishes its own reply straight to the results
+topic. The collector accumulates all of them and reports the batch as one
+message, verbatim - it never reads or merges what the agents wrote.
 
 The tree lives in network.py - this file only turns it into a runtime.
 """
@@ -162,7 +163,7 @@ class NodeAgent(RoutedAgent):
 
 async def build_runtime(
     model_client: ChatCompletionClient, root: Node = ROOT
-) -> tuple[SingleThreadedAgentRuntime, "asyncio.Queue[NodeResult]"]:
+) -> tuple[SingleThreadedAgentRuntime, list[NodeResult]]:
     """Register one agent per node and wire the fan-out topics from the tree."""
     nodes = walk(root)
     names = [node.name for node in nodes]
@@ -190,11 +191,12 @@ async def build_runtime(
             TypeSubscription(topic_type=inbox[node.name], agent_type=node.name)
         )
 
-    # Collect every agent's reply the way the user receives them: separately, in arrival order.
-    queue: "asyncio.Queue[NodeResult]" = asyncio.Queue()
+    # The collector accumulates every agent's reply, in arrival order, and the whole
+    # batch is reported as one message once the network goes idle.
+    collected: list[NodeResult] = []
 
     async def collect_result(_agent: ClosureContext, message: NodeResult, _ctx: MessageContext) -> None:
-        await queue.put(message)
+        collected.append(message)
 
     await ClosureAgent.register_closure(
         runtime,
@@ -205,7 +207,7 @@ async def build_runtime(
         ],
     )
 
-    return runtime, queue
+    return runtime, collected
 
 
 def describe(node: Node, indent: int = 0) -> str:
@@ -232,7 +234,7 @@ async def main() -> None:
         },
     )
 
-    runtime, queue = await build_runtime(model_client, ROOT)
+    runtime, collected = await build_runtime(model_client, ROOT)
     tree = describe(ROOT)
 
     while True:
@@ -246,17 +248,21 @@ async def main() -> None:
 
         logger.info(f"{'-' * 32} SESSION  START {'-' * 32}\nSession ID: {session_id}\nNetwork:\n{tree}\n")
 
+        collected.clear()
         runtime.start()
         await runtime.publish_message(
             Message(content=user_input), topic_id=TopicId(ROOT.name, source=session_id)
         )
         await runtime.stop_when_idle()
 
-        replies = []
-        while not queue.empty():
-            replies.append(await queue.get())
-        for reply in replies:
-            print(f"\n[{reply.agent}] (depth {reply.depth}):\n{reply.result}")
+        # The replies are reported as one batch, exactly as the agents wrote them.
+        batch = "".join(
+            f"\n\n[{i}] {reply.agent} (depth {reply.depth}):\n{reply.result}"
+            for i, reply in enumerate(collected, start=1)
+        )
+        header = f"{'=' * 28} COLLECTED: {len(collected)} replies {'=' * 28}"
+        print(f"\n{header}{batch}")
+        logger.info(f"\n📥 [Collector] → [User]: {header}{batch}")
 
         logger.info(f"{'-' * 32} SESSION  END {'-' * 32}\n\n")
 
