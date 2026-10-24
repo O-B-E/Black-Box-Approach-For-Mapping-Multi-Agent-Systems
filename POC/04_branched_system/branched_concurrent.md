@@ -350,12 +350,3 @@ In **every** topology run the orchestrators described their workers in the **pro
 This is a property of the prompts, not the framework: both orchestrators are told what their workers cover so they stay in their lane, and that sentence is what leaks. A system that never tells an orchestrator about its neighbours would hide the topology from this attack entirely, leaving only the upward edge of Mixture of Agents to expose it.
 
 
----
-car rental specialist
-restaurant specialist
-weather specialist
-
-travel concierge
-	flights 
-	hotels
-	local ops
