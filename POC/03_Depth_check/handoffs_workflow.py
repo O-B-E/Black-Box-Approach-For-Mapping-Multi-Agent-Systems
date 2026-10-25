@@ -54,6 +54,10 @@ logger.addHandler(file_handler)
 
 USER_TOPIC = "User"
 
+# Long chains hit the Gemini free-tier limit (15 requests/minute) part-way through, so each
+# worker can be made to wait before it calls the model. 0 keeps the original timing.
+HOP_DELAY_SECONDS = float(os.getenv("HOP_DELAY_SECONDS", "0"))
+
 HANDOFF_INSTRUCTION = (
     "When your part of the work is done, call `{tool}` to hand everything over to the next worker. "
     "Do not reply to the user yourself."
@@ -119,6 +123,9 @@ class WorkerAgent(RoutedAgent):
     async def handle_task(self, message: UserTask, ctx: MessageContext) -> None:
         # Incoming messages are logged by whoever sent them (UserAgent for user turns, the
         # 🔀 handoff line for worker turns), so logging them again here only duplicates.
+        if HOP_DELAY_SECONDS:
+            await asyncio.sleep(HOP_DELAY_SECONDS)
+
         llm_result = await self._model_client.create(
             messages=[self._system_message] + message.context,
             tools=self._tool_schema + self._delegate_tool_schema,

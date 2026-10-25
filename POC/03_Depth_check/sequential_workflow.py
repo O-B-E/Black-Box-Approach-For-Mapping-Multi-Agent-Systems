@@ -46,6 +46,10 @@ logger.addHandler(file_handler)
 
 USER_TOPIC = "User"
 
+# Long chains hit the Gemini free-tier limit (15 requests/minute) part-way through, so each
+# hop can be made to wait before it calls the model. 0 keeps the original timing.
+HOP_DELAY_SECONDS = float(os.getenv("HOP_DELAY_SECONDS", "0"))
+
 
 @dataclass
 class Message:
@@ -67,6 +71,9 @@ class WorkerAgent(RoutedAgent):
 
     @message_handler
     async def handle_message(self, message: Message, ctx: MessageContext) -> None:
+        if HOP_DELAY_SECONDS:
+            await asyncio.sleep(HOP_DELAY_SECONDS)
+
         context: list[LLMMessage] = [
             self._system_message,
             UserMessage(content=message.content, source="previous_step"),

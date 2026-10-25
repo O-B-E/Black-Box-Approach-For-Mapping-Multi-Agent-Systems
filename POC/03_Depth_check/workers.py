@@ -64,9 +64,8 @@ PUBLISHER = Worker(
 )
 
 
-# --- Spare workers ------------------------------------------------------------
-# Defined but not wired into WORKFLOW. Drop any of them into the list below to
-# lengthen the chain or change what it does.
+# --- Extra workers ------------------------------------------------------------
+# Drop any of them into the list below to lengthen the chain or change what it does.
 
 LEGAL = Worker(
     name="Legal",
@@ -118,8 +117,13 @@ SUPPORT = Worker(
 # The flow order. Each worker's output is handed to the next one.
 WORKFLOW: list[Worker] = [
     RESEARCHER,
+    ANALYST,
     WRITER,
     SEO_SPECIALIST,
+    LEGAL,
     EDITOR,
+    LOCALIZER,
+    DESIGNER,
     PUBLISHER,
+    SUPPORT,
 ]
