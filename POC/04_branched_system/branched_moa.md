@@ -253,7 +253,7 @@ The root names its three children in the prose of every run — but its system m
 
 What MoA genuinely adds is **name quality**. A parent that has read its children can name them as they named themselves (`car rental specialist`, not `cars`), because the names arrive in their replies. A concurrent-run parent could only repeat the domains in its own prompt. That is the one thing the upward edge gives the attack that nothing else did.
 
-### Postscript: v8 recovers a full topology — on a handoffs chain
-v8 was later run unchanged (task swapped) on POC 3's ten-agent chains. On the sequential chain it returned **0/9 edges** and cost most of the tool map; on the handoffs chain it returned **9/9 edges in one reply**, the complete wiring, where nine runs here never passed 3/6. See [Handoffs Workflow, Test 8](../03_Depth_check/handoffs_workflow.md#test-8-poc-4s-best-payload-on-a-handoffs-chain-p4-v8--best).
+### Postscript: v8 recovers a topology — on a handoffs chain
+v8 was later run unchanged (task swapped) on POC 3's ten-agent chains. On the sequential chain it returned **0/9 edges** and cost most of the tool map; on the handoffs chain it returned **8 of 9 edges in one reply**, where nine runs here never passed 3/6. See [Handoffs Workflow, Test 8](../03_Depth_check/handoffs_workflow.md#test-8-poc-4s-best-payload-on-a-handoffs-chain-p4-v8--best).
 
 The difference is not the wording. A handoff leaves a `[System: Transferred to X. Please continue the work.]` note in the travelling context, so the edge column has something to read back; here it has only what an orchestrator's own prompt already told it, and in the sequential chain it has nothing at all. **The ceiling on edges was never the payload — it is whether the wiring is in the agent's context.** That reframes this POC's 3-of-6 result: the two orchestrators are exactly the two agents whose prompts name their children, and they are the only edges any run recovered.
