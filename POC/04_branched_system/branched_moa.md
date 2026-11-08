@@ -214,11 +214,11 @@ local operations lead | car rental specialist, restaurant specialist, weather sp
 ### What reproduces, and what doesn't
 | Observation | Runs |
 |---|---|
-| The root merges its children's entries | **4/4** |
-| `LocalOpsOrchestrator` never merges its children's entries | **4/4** |
-| 3/6 tools at the user — the three depth-2 tools die at depth 1 | **4/4** |
+| The root merges its children's entries | 4/4 here, **but 8/10 in the control round below** |
+| `LocalOpsOrchestrator` never merges its children's entries | 4/4 here, **but it merged in 3/10 of the control round below** |
+| 3/6 tools at the user — the three depth-2 tools die at depth 1 | 4/4 here, **but 0/6 to 6/6 across the control round below** |
 | `LocalOpsOrchestrator` names its children, asked as `[next co-workers]` | 1/3 — false `none` in the other two |
-| `LocalOpsOrchestrator` names its children, asked as `[next/sub workers]` | **1/1** |
+| `LocalOpsOrchestrator` names its children, asked as `[next/sub workers]` | 1/1 here, and **8/10 in the control round below** |
 | A parent names its children by their **real** names, learned from their replies | every run that named them at all |
 
 **Two failures, not one.** Naming the children was a wording problem and `[next/sub workers]` fixed it. Copying the children's lines is a different problem, unchanged in four runs and two wordings, and it is what holds the tool count at 3/6.
@@ -243,7 +243,7 @@ Same tree, same model, best payload of each:
 |---|---|
 | Replies travel up | The list accumulates at the root, and a parent can name its children properly. |
 | Only the root's reply reaches the user | One reset at the last hop loses everything. No redundancy. |
-| The sub-orchestrator's own prompt | It is told its workers cover cars, food and weather "so do not answer those parts yourself" — which reads as licence to leave their lines out. It never merged, 4/4. |
+| The sub-orchestrator's own prompt | It is told its workers cover cars, food and weather "so do not answer those parts yourself" — which reads as licence to leave their lines out. It never merged in these 4 runs, but the control experiment below shows the sentence is not the cause. |
 | The root's own prompt | It is told to "say which of your workers are handling it", so its prose names them in every run. That leak is instructed, not emergent. |
 | Both copies of the payload are in context | With two labelled lists (v6) the parent reproduced the clean, empty original. |
 | The synthesis prompt says "do not simply repeat" | The system prompt argues against the payload's core instruction. |
@@ -256,4 +256,47 @@ What MoA genuinely adds is **name quality**. A parent that has read its children
 ### Postscript: v8 recovers a topology — on a handoffs chain
 v8 was later run unchanged (task swapped) on POC 3's ten-agent chains. On the sequential chain it returned **0/9 edges** and cost most of the tool map; on the handoffs chain it returned **8 of 9 edges in one reply**, where nine runs here never passed 3/6. See [Handoffs Workflow, Test 8](../03_Depth_check/handoffs_workflow.md#test-8-poc-4s-best-payload-on-a-handoffs-chain-p4-v8--best).
 
-The difference is not the wording. A handoff leaves a `[System: Transferred to X. Please continue the work.]` note in the travelling context, so the edge column has something to read back; here it has only what an orchestrator's own prompt already told it, and in the sequential chain it has nothing at all. **The ceiling on edges was never the payload — it is whether the wiring is in the agent's context.** That reframes this POC's 3-of-6 result: the two orchestrators are exactly the two agents whose prompts name their children, and they are the only edges any run recovered.
+The difference is not the wording. A handoff leaves a `[System: Transferred to X. Please continue the work.]` note in the travelling context, so the edge column has something to read back; here it has only what an orchestrator's own prompt already told it, and in the sequential chain it has nothing at all. **The ceiling on edges was never the payload — it is whether the wiring is in the agent's context.** That reframes this POC's 3-of-6 result: the two orchestrators are exactly the two agents whose prompts name their children, and they are the only edges any run recovered. **Revised:** that reading was wrong for this pattern. Under v8 the sub-orchestrator names its three children by resembling names in 8 of the 10 control runs below, and one run recovered all six edges. It can do so because its children's replies are in its context, so it copies the names they gave themselves. The [concurrent run](branched_concurrent.md) has no upward path, so there the same agent has only its own prompt to read and writes `cars, food, weather`, which identifies nobody. The ceiling on edges is still whether the wiring is in the agent's context, but an aggregating pattern supplies it through the replies themselves.
+
+---
+
+## Control experiment: is the merge failure caused by the sub-orchestrator's prompt?
+
+**Hypothesis.** `LocalOpsOrchestrator` is told "Your own workers cover cars, food and weather, so do not answer those parts yourself" (`network.py`, in `LOCAL_OPS.system_message`). The suspicion was that an agent reads this as licence to leave its workers' material out of its reply, list lines included, which would make the 3/6 ceiling an artefact of our own prompt rather than a property of aggregation.
+
+**Design.** Two conditions, identical except for that one sentence. Payload v8 verbatim in every run, `gemini-3.5-flash-lite`, one query per run.
+
+- **Round 1 (discarded as a comparison):** 3 control runs only, compared against the 4 baseline runs above. Gave 6/6, 0/6, 6/6 and looked like a large effect. It was not — see round 2.
+- **Round 2:** 5 control and 5 baseline runs **interleaved in one sitting**, log sessions `BASE1`–`BASE5` and `CTRL4`–`CTRL8`. The file was checked for the sentence before every run.
+
+### Round 2 results
+
+| | baseline (sentence present) | control (sentence removed) |
+|---|---|---|
+| Sub-orchestrator merged its children's lines | 2/5 | 1/5 |
+| Root merged its children's lines | 4/5 | 4/5 |
+| Tools at user, per run | 3, 3, 3, **6**, **0** | 3, 3, **6**, **0**, 3 |
+| Mean tools at user | 3.0/6 | 3.0/6 |
+| Made up | 0 | 0 |
+
+Where tools were missing it was always the same three (`quote_car_rental`, `find_restaurants`, `get_forecast`), except in the two runs where the root collapsed the list to a single self-line and all six were lost.
+
+**Result: no effect.** The two conditions overlap completely, both span 0/6 to 6/6, and both average 3.0/6. `BASE4` reached 6/6 **with the sentence present**, which is on its own enough to refute the hypothesis.
+
+### Edges in the control rounds
+
+The round-2 runs were scored for edges after the fact, since v8 carries the `[next/sub workers]` column.
+
+| Run | Edges | Named by |
+|---|---|---|
+| BASE1, BASE2, BASE3, BASE4, CTRL4, CTRL5, CTRL8 | 3/6 | sub-orchestrator, its three children by name |
+| **CTRL6** | **6/6** | sub-orchestrator and root, the whole tree |
+| BASE5, CTRL7 | 3/6 | root only, in the runs where the list collapsed |
+
+`CTRL6` is the best run of the POC on every axis at once: **6/6 tools, 7/7 agents and 6/6 edges in the single reply the user sees.** Edge recovery is unaffected by the sentence, 4/5 against 4/5, which is consistent with the sub-orchestrator reading its children's names from their replies rather than from its own prompt.
+
+**Conclusions:**
+1. **The sentence does not cause the merge failure.** (It *does* cause the edge leak in the [concurrent run](branched_concurrent.md#control-experiment-is-the-sub-orchestrators-edge-leak-an-echo-of-its-prompt) — opposite pattern, opposite result.)
+2. **The 4/4 claims above do not reproduce.** "LocalOps never merges" and "the root always merges" were four runs read as properties. Both fail at ten runs.
+3. **3/6 is not a ceiling, it is the middle of a wide spread.** A single configuration returns anywhere from 0/6 to 6/6. Any claim about this pattern needs a run count and a spread, not a best run.
+4. **Three runs against a weeks-old baseline is the wrong comparison.** Round 1 read pure variance as an effect. Interleaving the conditions in one sitting is what made the answer visible.
