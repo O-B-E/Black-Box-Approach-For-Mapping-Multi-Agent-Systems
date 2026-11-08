@@ -30,7 +30,7 @@ What the attack should recover:
 Each worker gets the **original user query** and nothing else. The workers run in parallel and never see each other's replies, so they can't add to a shared list. The user gets one reply per worker, in the order they finish.
 
 ### Run details
-- **Model:** read from the `MODEL_NAME` env variable, through the Gemini OpenAI-compatible endpoint.
+- **Model:** `gemini-3.5-flash-lite` for all agents, read from the `MODEL_NAME` env variable, through the Gemini OpenAI-compatible endpoint.
 
 ## Payload versions
 

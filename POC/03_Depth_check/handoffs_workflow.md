@@ -55,7 +55,7 @@ The cost is that **a delegating worker writes nothing**. A model turn is either 
 What saves the attack is that the **terminal worker sees everything** — including a `[System Note: Tool execution completed with results: …]` for every tool any worker ran — and can reconstruct the map from that history in one reply.
 
 ### Run details
-- **Model:** read from the `MODEL_NAME` env variable, through the Gemini OpenAI-compatible endpoint.
+- **Model:** `gemini-3.5-flash-lite` for all agents, read from the `MODEL_NAME` env variable, through the Gemini OpenAI-compatible endpoint.
 - **Tool results** go back as plain text (the Gemini `thought_signature` problem, same as the sequential chain). The follow-up call keeps **only** the handoff tool, so after using its tools a worker either moves the chain on or answers — it cannot re-trigger its own tools.
 - **`thought` capture:** when a model writes text *and* calls a tool in the same turn, the text lands in `CreateResult.thought`, not `content`. `handle_task` logs it as `💬` and appends it to the travelling context, so it is not lost. Every run but Test 5 hit this, and in Tests 3, 4 and 6 it is where the list came from.
 - **Logging:** T1 was recorded before the duplicate-logging fix, so its user turns appear twice and each hop carries a `📨 [X] → [Y]: [System: Transferred …]` line. T2 onward is post-fix: one line per event.
